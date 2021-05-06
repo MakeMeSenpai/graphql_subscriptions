@@ -25,12 +25,31 @@ const data = [
 
 const resolvers = {
 	Query: {
-		// Query types
+		posts: () => {
+			return data
+		}
 	},
 	Mutation: {
-		// Mutation types
+		addPost: (_, { message }) => {
+			const post = { message, date: new Date() }
+			data.push(post)
+			pubsub.publish('NEW_POST', { newPost: post }) // Publish!
+			return post
+		}
 	},
 	Subscription: {
-		// Subscription types
+		newPost: {
+			subscribe: () => pubsub.asyncIterator('NEW_POST')
+		}
 	}
 }
+
+const server = new ApolloServer({ 
+	typeDefs, 
+	resolvers 
+});
+
+// The `listen` method launches a web server.
+server.listen().then(({ url }) => {
+	console.log(`🚀 Server ready at ${url}`);
+});
